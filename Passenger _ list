@@ -1,0 +1,189 @@
+# passenger_list.py
+from node import Node
+
+# This class manage the list of all passengers
+class PassengerList:
+    def __init__(self):
+        # First passenger in the list
+        self.head = None    
+        # Last passenger in the list
+        self.tail = None    
+
+    # This function add a new passenger to the list and put them in the right spot base on their seat number
+    def add_passenger(self, name, seat_number, is_priority):
+        new_passenger = Node({"name": name, "seat_number": seat_number, "is_priority": is_priority, "luggage": []})
+        
+        # Check if the list is empty self.head is None
+        if self.head is None:
+            # If list is empty new passenger becomes the head
+            self.head = new_passenger
+            self.tail = new_passenger
+            return
+        
+        # Start with the head of the list
+        current = self.head
+        # Keep track of the previous node
+        previous = None 
+        
+        # Find the right spot based on seat number and priority
+        while current:
+            # If the new passenger is priority and the current passenger is also priority
+            if is_priority and current.data["is_priority"]:
+                # Check if current seat is lower if so move forward
+                if current.data["seat_number"] < seat_number:
+                    previous = current
+                    current = current.next
+                else:
+                    break
+            
+            # If new passenger is priority but current is not add new passenger before current
+            elif is_priority and not current.data["is_priority"]:
+                break
+            
+            # If no are priority insert based on seat number
+            elif not is_priority and not current.data["is_priority"]:
+                if current.data["seat_number"] < seat_number:
+                    previous = current
+                    current = current.next
+                else:
+                    break
+            else:
+                previous = current
+                current = current.next
+        
+        # Insert the new passenger at the correct position
+        if previous is None:
+            # Insert at the head if it should be the first passenger
+            new_passenger.next = self.head
+            self.head.prev = new_passenger
+            self.head = new_passenger
+        else:
+            # Insert between previous and current nodes
+            new_passenger.prev = previous
+            new_passenger.next = current
+            previous.next = new_passenger
+            if current:
+                current.prev = new_passenger
+            else:
+                self.tail = new_passenger
+
+    # This function change a passenger seat number it is like moving them to a different spot in line
+    def update_passenger(self, old_seat_number, new_seat_number):
+        # Find the passenger with the old seat number
+        current = self.head
+        while current and current.data["seat_number"] != old_seat_number:
+            current = current.next
+        # passenger not found
+        if not current:
+            print("Passenger not found")
+            return
+        
+        # Save their info remove them
+        # Make a copy to preserve the data
+        passenger_data = current.data.copy()  
+        # remove the passenger
+        self.remove_passenger(old_seat_number)
+        # add them back with the new seat
+        self.add_passenger(passenger_data["name"], new_seat_number, passenger_data["is_priority"])
+        
+        # Print message for updation
+        message = "Updated seat for " + passenger_data["name"] + " from " + str(old_seat_number) + " to " + str(new_seat_number)
+        print(message)
+
+    # This function find a passenger by their seat number
+    def get_passenger(self, seat_number):  
+        # Start from the head of the list
+        current = self.head  
+        
+        # Check the list until the seat number match
+        while current and current.data["seat_number"] != seat_number:  
+            current = current.next  
+        
+        # If found return the passenger data otherwise return None
+        if current:  
+            return current.data  
+        else:  
+            return None  
+
+    # This function remove a passenger from the list
+    def remove_passenger(self, seat_number):
+        # If list is empty nothing to remove
+        if not self.head:
+            print("No passengers to remove")
+            return None
+        
+        # Find the passenger to remove
+        current = self.head
+        # while loop to find the passenger
+        while current and current.data["seat_number"] != seat_number:
+            current = current.next
+
+        # passenger not found
+        if not current:
+            print("Passenger not found")
+            return None
+            
+        removed_data = current.data
+        
+        # Remove the passenger and fix the connections in the list
+        if current == self.head:  
+            # Move the head to the next passenger
+            self.head = current.next  
+            # If there is a new head set its previous link to None
+            if self.head:  
+                self.head.prev = None  
+        else:
+            # Link the previous passenger to the next one
+            current.prev.next = current.next
+            
+        # Update the tail if removing the last node
+        if current == self.tail:
+            self.tail = current.prev
+        elif current.next:
+            # If not the last node update the next node prev pointer
+            current.next.prev = current.prev
+            
+        # Print the removed message
+        message = "Passenger with seat number " + str(seat_number) + " removed"
+        print(message)
+        return removed_data
+
+    # This function show all passengers in the list
+    def display_passengers(self):
+        if not self.head:
+            print("No passengers in the list.")
+            return
+        # Print the passengers sorted by seat number
+        print("\nPassenger List (Sorted by Seat Number):")
+        current = self.head
+        while current:
+            # Check if the passenger has any luggage
+            if current.data['luggage']:  
+                # Initialize an empty string to store luggage information
+                luggage_info = ""  
+                
+                # Loop through each luggage item
+                for item in current.data['luggage']:  
+                    # Add each luggage item to the luggage_info string with a comma and space
+                    luggage_info += item + ", "  
+                
+                # Remove the last comma and space from the luggage_info string
+                luggage_info = luggage_info.rstrip(", ")  
+            
+            # If there is no luggage set luggage_info to None
+            else:  
+                luggage_info = "None"  
+
+            # Get passenger details
+            passenger_name = current.data['name']
+            seat_number = current.data['seat_number']
+            
+            # Add priority status if applicable
+            if current.data['is_priority']:
+                is_priority = " (Priority)"
+            else:
+                is_priority = ""
+            
+            # Print passenger information with also priority seat number and luggae information
+            print("Passenger: " + passenger_name + ", Seat: " + str(seat_number) + is_priority + ", Luggage: " + luggage_info)
+            current = current.next
