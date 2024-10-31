@@ -1,0 +1,9 @@
+# node.py
+class Node:
+    def __init__(self, data):
+        # Store passenger detail like name and seat number
+        self.data = data          
+        # Points to the next passenger in line
+        self.next = None          
+        # Points to the previous passenger in line
+        self.prev = None          
