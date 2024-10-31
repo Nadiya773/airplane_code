@@ -1,0 +1,111 @@
+# node.py
+class Node:
+    def __init__(self, data):
+        # Store passenger detail like name and seat number
+        self.data = data          
+        # Points to the next passenger in line
+        self.next = None          
+        # Points to the previous passenger in line
+        self.prev = None     
+
+# passenger_list.py
+from node import Node
+
+class PassengerList:
+    def __init__(self):
+        self.head = None    
+        self.tail = None    
+
+    def add_passenger(self, name, seat_number, is_priority):
+        new_passenger = Node({"name": name, "seat_number": seat_number, "is_priority": is_priority, "luggage": []})
+        if self.head is None:
+            self.head = new_passenger
+            self.tail = new_passenger
+            return
+        current = self.head
+        previous = None 
+        while current:
+            if is_priority and current.data["is_priority"]:
+                if current.data["seat_number"] < seat_number:
+                    previous = current
+                    current = current.next
+                else:
+                    break
+            elif is_priority and not current.data["is_priority"]:
+                break
+            elif not is_priority and not current.data["is_priority"]:
+                if current.data["seat_number"] < seat_number:
+                    previous = current
+                    current = current.next
+                else:
+                    break
+            else:
+                previous = current
+                current = current.next
+        if previous is None:
+            new_passenger.next = self.head
+            self.head.prev = new_passenger
+            self.head = new_passenger
+        else:
+            new_passenger.prev = previous
+            new_passenger.next = current
+            previous.next = new_passenger
+            if current:
+                current.prev = new_passenger
+            else:
+                self.tail = new_passenger
+
+    def update_passenger(self, old_seat_number, new_seat_number):
+        current = self.head
+        while current and current.data["seat_number"] != old_seat_number:
+            current = current.next
+        if not current:
+            print("Passenger not found")
+            return
+        passenger_data = current.data.copy()
+        self.remove_passenger(old_seat_number)
+        self.add_passenger(passenger_data["name"], new_seat_number, passenger_data["is_priority"])
+        print("Updated seat for " + passenger_data["name"] + " from " + str(old_seat_number) + " to " + str(new_seat_number))
+
+    def get_passenger(self, seat_number):
+        current = self.head
+        while current and current.data["seat_number"] != seat_number:
+            current = current.next
+        return current.data if current else None
+
+    def remove_passenger(self, seat_number):
+        if not self.head:
+            print("No passengers to remove")
+            return None
+        current = self.head
+        while current and current.data["seat_number"] != seat_number:
+            current = current.next
+        if not current:
+            print("Passenger not found")
+            return None
+        removed_data = current.data
+        if current == self.head:
+            self.head = current.next
+            if self.head:
+                self.head.prev = None
+        else:
+            current.prev.next = current.next
+        if current == self.tail:
+            self.tail = current.prev
+        elif current.next:
+            current.next.prev = current.prev
+        print("Passenger with seat number " + str(seat_number) + " removed")
+        return removed_data
+
+    def display_passengers(self):
+        if not self.head:
+            print("No passengers in the list.")
+            return
+        print("\nPassenger List (Sorted by Seat Number):")
+        current = self.head
+        while current:
+            luggage_info = ", ".join(current.data['luggage']) if current.data['luggage'] else "None"
+            is_priority = " (Priority)" if current.data['is_priority'] else ""
+            print("Passenger: " + current.data['name'] + ", Seat: " + str(current.data['seat_number']) + is_priority + ", Luggage: " + luggage_info)
+            current = current.next
+
